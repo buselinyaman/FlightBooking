@@ -1,0 +1,2257 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SkyAdmin — Havayolu Yönetim Sistemi</title>
+
+  <!-- Bootstrap 5 CDN -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <!-- Bootstrap Icons CDN -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet" />
+  <!-- Google Fonts: Space Mono (numbers/mono) + Sora (headings) + DM Sans (body) -->
+  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet" />
+
+  <style>
+    /* ═══════════════════════════════════════════
+       CSS CUSTOM PROPERTIES — DESIGN TOKENS
+    ═══════════════════════════════════════════ */
+    :root {
+      --navy-950: #040d1f;
+      --navy-900: #071630;
+      --navy-800: #0c2147;
+      --navy-700: #112d5e;
+      --navy-600: #173b7a;
+      --accent-blue: #2563eb;
+      --accent-blue-light: #3b82f6;
+      --accent-sky: #0ea5e9;
+      --accent-cyan: #06b6d4;
+      --silver-100: #f0f4fa;
+      --silver-200: #e2e8f4;
+      --silver-300: #c8d4e8;
+      --silver-400: #94a3b8;
+      --silver-500: #64748b;
+      --white: #ffffff;
+      --sidebar-width: 260px;
+      --sidebar-collapsed: 72px;
+      --navbar-height: 64px;
+      --transition: 0.22s cubic-bezier(0.4, 0, 0.2, 1);
+      --shadow-sm: 0 1px 3px rgba(4,13,31,0.12), 0 1px 2px rgba(4,13,31,0.08);
+      --shadow-md: 0 4px 16px rgba(4,13,31,0.14), 0 2px 6px rgba(4,13,31,0.08);
+      --shadow-lg: 0 12px 40px rgba(4,13,31,0.18), 0 4px 12px rgba(4,13,31,0.1);
+      --shadow-card: 0 2px 12px rgba(37,99,235,0.07), 0 1px 4px rgba(4,13,31,0.08);
+      --radius-sm: 6px;
+      --radius-md: 10px;
+      --radius-lg: 14px;
+      --radius-xl: 20px;
+    }
+
+    /* ═══════════════════════════════════════════
+       RESET & BASE
+    ═══════════════════════════════════════════ */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: var(--silver-100);
+      color: #1e293b;
+      overflow-x: hidden;
+      min-height: 100vh;
+    }
+
+    h1, h2, h3, h4, h5, h6,
+    .font-heading { font-family: 'Sora', sans-serif; }
+
+    .font-mono { font-family: 'Space Mono', monospace; }
+
+    /* ═══════════════════════════════════════════
+       LAYOUT SHELL
+    ═══════════════════════════════════════════ */
+    .admin-shell {
+      display: flex;
+      min-height: 100vh;
+    }
+
+    /* ═══════════════════════════════════════════
+       SIDEBAR
+    ═══════════════════════════════════════════ */
+    .sidebar {
+      width: var(--sidebar-width);
+      min-height: 100vh;
+      background: var(--navy-900);
+      position: fixed;
+      left: 0;
+      top: 0;
+      bottom: 0;
+      z-index: 1000;
+      display: flex;
+      flex-direction: column;
+      transition: width var(--transition);
+      overflow: hidden;
+    }
+
+    .sidebar.collapsed {
+      width: var(--sidebar-collapsed);
+    }
+
+    /* Sidebar Brand */
+    .sidebar-brand {
+      height: var(--navbar-height);
+      display: flex;
+      align-items: center;
+      padding: 0 18px;
+      gap: 12px;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+      flex-shrink: 0;
+      text-decoration: none;
+      position: relative;
+    }
+
+    .brand-icon {
+      width: 36px;
+      height: 36px;
+      border-radius: var(--radius-sm);
+      background: linear-gradient(135deg, var(--accent-blue), var(--accent-sky));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      font-size: 18px;
+      color: white;
+      box-shadow: 0 4px 12px rgba(37,99,235,0.4);
+    }
+
+    .brand-text {
+      white-space: nowrap;
+      overflow: hidden;
+      transition: opacity var(--transition), width var(--transition);
+    }
+
+    .brand-name {
+      font-family: 'Sora', sans-serif;
+      font-weight: 800;
+      font-size: 18px;
+      color: var(--white);
+      line-height: 1;
+      letter-spacing: -0.3px;
+    }
+
+    .brand-sub {
+      font-size: 10px;
+      color: var(--silver-400);
+      font-weight: 400;
+      letter-spacing: 1.2px;
+      text-transform: uppercase;
+      margin-top: 2px;
+    }
+
+    .sidebar.collapsed .brand-text { opacity: 0; width: 0; }
+
+    /* Sidebar nav label */
+    .sidebar-label {
+      font-size: 9px;
+      font-weight: 700;
+      letter-spacing: 1.8px;
+      text-transform: uppercase;
+      color: var(--silver-400);
+      padding: 20px 20px 8px;
+      white-space: nowrap;
+      overflow: hidden;
+      transition: opacity var(--transition);
+    }
+
+    .sidebar.collapsed .sidebar-label { opacity: 0; }
+
+    /* Nav items */
+    .sidebar-nav {
+      flex: 1;
+      overflow-y: auto;
+      overflow-x: hidden;
+      padding: 8px 0;
+      scrollbar-width: thin;
+      scrollbar-color: rgba(255,255,255,0.1) transparent;
+    }
+
+    .nav-item-wrap { position: relative; }
+
+    .nav-link-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 18px;
+      margin: 2px 10px;
+      border-radius: var(--radius-md);
+      color: rgba(255,255,255,0.62);
+      text-decoration: none;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: background var(--transition), color var(--transition), transform var(--transition);
+      position: relative;
+    }
+
+    .nav-link-item:hover {
+      background: rgba(255,255,255,0.07);
+      color: rgba(255,255,255,0.9);
+      transform: translateX(2px);
+    }
+
+    .nav-link-item.active {
+      background: linear-gradient(135deg, rgba(37,99,235,0.35), rgba(14,165,233,0.2));
+      color: #fff;
+      box-shadow: 0 2px 12px rgba(37,99,235,0.25);
+      border: 1px solid rgba(59,130,246,0.25);
+    }
+
+    .nav-link-item.active .nav-icon {
+      color: var(--accent-sky);
+    }
+
+    .nav-icon {
+      font-size: 17px;
+      flex-shrink: 0;
+      width: 20px;
+      text-align: center;
+      transition: color var(--transition);
+    }
+
+    .nav-label {
+      transition: opacity var(--transition), width var(--transition);
+      overflow: hidden;
+    }
+
+    .sidebar.collapsed .nav-label { opacity: 0; width: 0; }
+
+    .nav-badge {
+      margin-left: auto;
+      font-size: 10px;
+      font-weight: 700;
+      background: var(--accent-blue);
+      color: white;
+      border-radius: 100px;
+      padding: 2px 7px;
+      transition: opacity var(--transition);
+    }
+
+    .sidebar.collapsed .nav-badge { opacity: 0; }
+
+    .nav-arrow {
+      margin-left: auto;
+      font-size: 11px;
+      transition: transform 0.22s, opacity var(--transition);
+    }
+
+    .sidebar.collapsed .nav-arrow { opacity: 0; }
+
+    .nav-link-item.sub-open .nav-arrow { transform: rotate(90deg); }
+
+    /* Sub menu */
+    .sub-menu {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.3s cubic-bezier(0.4,0,0.2,1);
+    }
+
+    .sub-menu.open { max-height: 200px; }
+
+    .sub-menu-link {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 18px 8px 50px;
+      margin: 1px 10px;
+      border-radius: var(--radius-sm);
+      color: rgba(255,255,255,0.48);
+      font-size: 13px;
+      text-decoration: none;
+      white-space: nowrap;
+      transition: color var(--transition), background var(--transition);
+    }
+
+    .sub-menu-link:hover { color: rgba(255,255,255,0.8); background: rgba(255,255,255,0.05); }
+    .sub-menu-link.active { color: var(--accent-sky); }
+
+    .sidebar.collapsed .sub-menu { display: none; }
+
+    /* Sidebar tooltip on collapsed */
+    .sidebar.collapsed .nav-link-item:hover::after {
+      content: attr(data-tooltip);
+      position: absolute;
+      left: calc(var(--sidebar-collapsed) - 2px);
+      top: 50%;
+      transform: translateY(-50%);
+      background: var(--navy-800);
+      color: white;
+      font-size: 12px;
+      font-weight: 500;
+      padding: 6px 12px;
+      border-radius: var(--radius-sm);
+      white-space: nowrap;
+      border: 1px solid rgba(255,255,255,0.1);
+      pointer-events: none;
+      z-index: 1100;
+      box-shadow: var(--shadow-md);
+    }
+
+    /* Sidebar footer */
+    .sidebar-footer {
+      padding: 12px 10px;
+      border-top: 1px solid rgba(255,255,255,0.06);
+      flex-shrink: 0;
+    }
+
+    .sidebar-user {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px;
+      border-radius: var(--radius-md);
+      transition: background var(--transition);
+      cursor: pointer;
+    }
+
+    .sidebar-user:hover { background: rgba(255,255,255,0.06); }
+
+    .sidebar-avatar {
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--accent-blue), var(--accent-sky));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 13px;
+      font-weight: 700;
+      color: white;
+      flex-shrink: 0;
+      font-family: 'Sora', sans-serif;
+    }
+
+    .sidebar-user-info {
+      overflow: hidden;
+      transition: opacity var(--transition), width var(--transition);
+    }
+
+    .sidebar.collapsed .sidebar-user-info { opacity: 0; width: 0; }
+
+    .sidebar-user-name {
+      font-size: 13px;
+      font-weight: 600;
+      color: rgba(255,255,255,0.88);
+      white-space: nowrap;
+    }
+
+    .sidebar-user-role {
+      font-size: 11px;
+      color: var(--silver-400);
+      white-space: nowrap;
+    }
+
+    /* ═══════════════════════════════════════════
+       MAIN CONTENT WRAPPER
+    ═══════════════════════════════════════════ */
+    .main-wrapper {
+      margin-left: var(--sidebar-width);
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+      transition: margin-left var(--transition);
+    }
+
+    .main-wrapper.collapsed-main {
+      margin-left: var(--sidebar-collapsed);
+    }
+
+    /* ═══════════════════════════════════════════
+       NAVBAR
+    ═══════════════════════════════════════════ */
+    .topbar {
+      height: var(--navbar-height);
+      background: var(--white);
+      border-bottom: 1px solid var(--silver-200);
+      display: flex;
+      align-items: center;
+      padding: 0 24px;
+      gap: 16px;
+      position: sticky;
+      top: 0;
+      z-index: 900;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .topbar-toggle {
+      width: 36px;
+      height: 36px;
+      border: none;
+      background: var(--silver-100);
+      border-radius: var(--radius-sm);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      font-size: 16px;
+      color: var(--silver-500);
+      transition: background var(--transition), color var(--transition);
+      flex-shrink: 0;
+    }
+
+    .topbar-toggle:hover {
+      background: var(--silver-200);
+      color: #1e293b;
+    }
+
+    /* Search */
+    .topbar-search {
+      flex: 1;
+      max-width: 380px;
+      position: relative;
+    }
+
+    .topbar-search input {
+      width: 100%;
+      padding: 8px 14px 8px 38px;
+      border: 1.5px solid var(--silver-200);
+      border-radius: var(--radius-md);
+      font-size: 13.5px;
+      font-family: 'DM Sans', sans-serif;
+      background: var(--silver-100);
+      color: #1e293b;
+      outline: none;
+      transition: border-color var(--transition), box-shadow var(--transition), background var(--transition);
+    }
+
+    .topbar-search input:focus {
+      background: white;
+      border-color: var(--accent-blue-light);
+      box-shadow: 0 0 0 3px rgba(37,99,235,0.1);
+    }
+
+    .topbar-search input::placeholder { color: var(--silver-400); }
+
+    .search-icon {
+      position: absolute;
+      left: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--silver-400);
+      font-size: 14px;
+      pointer-events: none;
+    }
+
+    .topbar-right {
+      margin-left: auto;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .topbar-btn {
+      width: 38px;
+      height: 38px;
+      border: none;
+      background: var(--silver-100);
+      border-radius: var(--radius-sm);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      font-size: 16px;
+      color: var(--silver-500);
+      transition: background var(--transition), color var(--transition);
+      position: relative;
+      text-decoration: none;
+    }
+
+    .topbar-btn:hover {
+      background: var(--silver-200);
+      color: #1e293b;
+    }
+
+    .topbar-notif-badge {
+      position: absolute;
+      top: 6px;
+      right: 6px;
+      width: 8px;
+      height: 8px;
+      background: #ef4444;
+      border-radius: 50%;
+      border: 2px solid var(--white);
+    }
+
+    .topbar-divider {
+      width: 1px;
+      height: 28px;
+      background: var(--silver-200);
+      margin: 0 6px;
+    }
+
+    /* User profile dropdown */
+    .topbar-profile {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      cursor: pointer;
+      padding: 5px 10px 5px 5px;
+      border-radius: var(--radius-md);
+      transition: background var(--transition);
+      border: none;
+      background: none;
+      text-align: left;
+    }
+
+    .topbar-profile:hover { background: var(--silver-100); }
+
+    .topbar-avatar {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--accent-blue), var(--accent-sky));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 13px;
+      font-weight: 700;
+      color: white;
+      font-family: 'Sora', sans-serif;
+      flex-shrink: 0;
+    }
+
+    .topbar-user-name {
+      font-size: 13.5px;
+      font-weight: 600;
+      color: #1e293b;
+      white-space: nowrap;
+      line-height: 1.2;
+    }
+
+    .topbar-user-role {
+      font-size: 11px;
+      color: var(--silver-400);
+      white-space: nowrap;
+    }
+
+    /* ═══════════════════════════════════════════
+       PAGE CONTENT
+    ═══════════════════════════════════════════ */
+    .page-content {
+      flex: 1;
+      padding: 28px 28px 40px;
+    }
+
+    /* Page Header */
+    .page-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 20px;
+      margin-bottom: 28px;
+    }
+
+    .page-title {
+      font-family: 'Sora', sans-serif;
+      font-size: 22px;
+      font-weight: 700;
+      color: var(--navy-900);
+      line-height: 1.2;
+      letter-spacing: -0.4px;
+    }
+
+    .page-subtitle {
+      font-size: 13.5px;
+      color: var(--silver-500);
+      margin-top: 5px;
+      max-width: 520px;
+    }
+
+    /* Breadcrumb */
+    .page-breadcrumb {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 12px;
+      color: var(--silver-400);
+      margin-bottom: 6px;
+    }
+
+    .page-breadcrumb a {
+      color: var(--accent-blue);
+      text-decoration: none;
+      transition: color var(--transition);
+    }
+
+    .page-breadcrumb a:hover { color: var(--accent-blue-light); }
+
+    /* Stats Row */
+    .stats-row {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+
+    .stat-card {
+      background: var(--white);
+      border-radius: var(--radius-lg);
+      padding: 18px 20px;
+      box-shadow: var(--shadow-card);
+      border: 1px solid var(--silver-200);
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      transition: transform var(--transition), box-shadow var(--transition);
+    }
+
+    .stat-card:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-md);
+    }
+
+    .stat-icon-wrap {
+      width: 46px;
+      height: 46px;
+      border-radius: var(--radius-md);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      flex-shrink: 0;
+    }
+
+    .si-blue { background: rgba(37,99,235,0.1); color: var(--accent-blue); }
+    .si-green { background: rgba(16,185,129,0.1); color: #10b981; }
+    .si-amber { background: rgba(245,158,11,0.1); color: #f59e0b; }
+    .si-red { background: rgba(239,68,68,0.1); color: #ef4444; }
+
+    .stat-value {
+      font-family: 'Sora', sans-serif;
+      font-size: 22px;
+      font-weight: 700;
+      color: var(--navy-900);
+      line-height: 1;
+    }
+
+    .stat-label {
+      font-size: 12px;
+      color: var(--silver-500);
+      margin-top: 3px;
+    }
+
+    .stat-delta {
+      font-size: 11px;
+      font-weight: 600;
+      margin-top: 4px;
+    }
+
+    .stat-delta.up { color: #10b981; }
+    .stat-delta.down { color: #ef4444; }
+
+    /* Main Card */
+    .main-card {
+      background: var(--white);
+      border-radius: var(--radius-xl);
+      border: 1px solid var(--silver-200);
+      box-shadow: var(--shadow-card);
+      overflow: hidden;
+    }
+
+    .card-header-bar {
+      padding: 18px 24px;
+      border-bottom: 1px solid var(--silver-200);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+
+    .card-header-left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .card-header-icon {
+      width: 38px;
+      height: 38px;
+      border-radius: var(--radius-sm);
+      background: linear-gradient(135deg, var(--accent-blue), var(--accent-sky));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 17px;
+      color: white;
+      box-shadow: 0 3px 10px rgba(37,99,235,0.3);
+    }
+
+    .card-title {
+      font-family: 'Sora', sans-serif;
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--navy-900);
+    }
+
+    .card-count {
+      font-size: 12px;
+      color: var(--silver-500);
+    }
+
+    /* Toolbar */
+    .table-toolbar {
+      padding: 14px 24px;
+      border-bottom: 1px solid var(--silver-200);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .search-field {
+      position: relative;
+      flex: 1;
+      min-width: 200px;
+      max-width: 320px;
+    }
+
+    .search-field input {
+      width: 100%;
+      padding: 8px 14px 8px 36px;
+      border: 1.5px solid var(--silver-200);
+      border-radius: var(--radius-md);
+      font-size: 13.5px;
+      font-family: 'DM Sans', sans-serif;
+      background: var(--silver-100);
+      outline: none;
+      color: #1e293b;
+      transition: border-color var(--transition), box-shadow var(--transition), background var(--transition);
+    }
+
+    .search-field input:focus {
+      background: white;
+      border-color: var(--accent-blue-light);
+      box-shadow: 0 0 0 3px rgba(37,99,235,0.1);
+    }
+
+    .search-field input::placeholder { color: var(--silver-400); }
+
+    .search-field .si {
+      position: absolute;
+      left: 11px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--silver-400);
+      font-size: 14px;
+      pointer-events: none;
+    }
+
+    /* Filter Dropdown */
+    .filter-select {
+      padding: 8px 32px 8px 12px;
+      border: 1.5px solid var(--silver-200);
+      border-radius: var(--radius-md);
+      font-size: 13.5px;
+      font-family: 'DM Sans', sans-serif;
+      background: var(--silver-100);
+      color: #1e293b;
+      outline: none;
+      appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Cpath fill='%2394a3b8' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 10px center;
+      background-size: 10px;
+      cursor: pointer;
+      transition: border-color var(--transition);
+    }
+
+    .filter-select:focus { border-color: var(--accent-blue-light); }
+
+    .toolbar-right { margin-left: auto; display: flex; align-items: center; gap: 8px; }
+
+    /* Buttons */
+    .btn-primary-custom {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 9px 18px;
+      background: linear-gradient(135deg, var(--accent-blue), var(--accent-sky));
+      color: white;
+      border: none;
+      border-radius: var(--radius-md);
+      font-size: 13.5px;
+      font-weight: 600;
+      font-family: 'DM Sans', sans-serif;
+      cursor: pointer;
+      transition: transform var(--transition), box-shadow var(--transition), filter var(--transition);
+      text-decoration: none;
+      box-shadow: 0 3px 12px rgba(37,99,235,0.35);
+      white-space: nowrap;
+    }
+
+    .btn-primary-custom:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 6px 20px rgba(37,99,235,0.45);
+      filter: brightness(1.05);
+      color: white;
+    }
+
+    .btn-primary-custom:active { transform: translateY(0); }
+
+    .btn-outline-custom {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      padding: 8px 14px;
+      background: transparent;
+      border: 1.5px solid var(--silver-300);
+      color: var(--silver-500);
+      border-radius: var(--radius-md);
+      font-size: 13px;
+      font-weight: 500;
+      font-family: 'DM Sans', sans-serif;
+      cursor: pointer;
+      transition: all var(--transition);
+      text-decoration: none;
+      white-space: nowrap;
+    }
+
+    .btn-outline-custom:hover {
+      background: var(--silver-100);
+      border-color: var(--silver-400);
+      color: #1e293b;
+    }
+
+    /* ═══════════════════════════════════════════
+       TABLE
+    ═══════════════════════════════════════════ */
+    .flights-table-wrap {
+      overflow-x: auto;
+    }
+
+    .flights-table {
+      width: 100%;
+      border-collapse: separate;
+      border-spacing: 0;
+    }
+
+    .flights-table thead tr th {
+      background: var(--silver-100);
+      color: var(--silver-500);
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.8px;
+      text-transform: uppercase;
+      padding: 12px 16px;
+      border-bottom: 1px solid var(--silver-200);
+      white-space: nowrap;
+      font-family: 'Sora', sans-serif;
+    }
+
+    .flights-table thead tr th:first-child { padding-left: 24px; }
+    .flights-table thead tr th:last-child { padding-right: 24px; }
+
+    .flights-table tbody tr {
+      transition: background var(--transition);
+    }
+
+    .flights-table tbody tr:nth-child(even) { background: rgba(240,244,250,0.45); }
+
+    .flights-table tbody tr:hover {
+      background: rgba(37,99,235,0.04);
+    }
+
+    .flights-table tbody td {
+      padding: 14px 16px;
+      border-bottom: 1px solid var(--silver-200);
+      vertical-align: middle;
+      font-size: 13.5px;
+      color: #334155;
+    }
+
+    .flights-table tbody td:first-child { padding-left: 24px; }
+    .flights-table tbody td:last-child { padding-right: 24px; }
+
+    .flights-table tbody tr:last-child td { border-bottom: none; }
+
+    /* Flight Number */
+    .flight-no {
+      font-family: 'Space Mono', monospace;
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--accent-blue);
+      background: rgba(37,99,235,0.08);
+      padding: 4px 10px;
+      border-radius: var(--radius-sm);
+      display: inline-block;
+      letter-spacing: 0.5px;
+    }
+
+    /* City cells */
+    .city-cell {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .city-flag {
+      font-size: 16px;
+      line-height: 1;
+    }
+
+    .city-name {
+      font-size: 13.5px;
+      font-weight: 500;
+      color: #334155;
+    }
+
+    /* Time cells */
+    .time-cell {
+      font-family: 'Space Mono', monospace;
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--navy-800);
+    }
+
+    /* Aircraft */
+    .aircraft-cell {
+      font-size: 12.5px;
+      color: var(--silver-500);
+    }
+
+    /* Gate */
+    .gate-badge {
+      font-family: 'Space Mono', monospace;
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--navy-700);
+      background: var(--silver-200);
+      padding: 3px 10px;
+      border-radius: var(--radius-sm);
+      display: inline-block;
+    }
+
+    /* Status Badges */
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 4px 12px;
+      border-radius: 100px;
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 0.3px;
+    }
+
+    .status-badge::before {
+      content: '';
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    .status-planned {
+      background: rgba(59,130,246,0.1);
+      color: #2563eb;
+      border: 1px solid rgba(59,130,246,0.2);
+    }
+    .status-planned::before { background: #3b82f6; }
+
+    .status-boarding {
+      background: rgba(16,185,129,0.1);
+      color: #059669;
+      border: 1px solid rgba(16,185,129,0.2);
+    }
+    .status-boarding::before { background: #10b981; animation: pulse-dot 1.5s infinite; }
+
+    .status-delayed {
+      background: rgba(245,158,11,0.1);
+      color: #d97706;
+      border: 1px solid rgba(245,158,11,0.2);
+    }
+    .status-delayed::before { background: #f59e0b; }
+
+    .status-cancelled {
+      background: rgba(239,68,68,0.1);
+      color: #dc2626;
+      border: 1px solid rgba(239,68,68,0.2);
+    }
+    .status-cancelled::before { background: #ef4444; }
+
+    @keyframes pulse-dot {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.5; transform: scale(0.85); }
+    }
+
+    /* Action buttons */
+    .action-btns {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .action-btn {
+      width: 32px;
+      height: 32px;
+      border: none;
+      border-radius: var(--radius-sm);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      cursor: pointer;
+      transition: background var(--transition), color var(--transition), transform var(--transition);
+    }
+
+    .action-btn:hover { transform: scale(1.1); }
+
+    .ab-view { background: rgba(14,165,233,0.1); color: #0ea5e9; }
+    .ab-view:hover { background: rgba(14,165,233,0.2); }
+
+    .ab-edit { background: rgba(245,158,11,0.1); color: #d97706; }
+    .ab-edit:hover { background: rgba(245,158,11,0.2); }
+
+    .ab-delete { background: rgba(239,68,68,0.1); color: #dc2626; }
+    .ab-delete:hover { background: rgba(239,68,68,0.2); }
+
+    /* ═══════════════════════════════════════════
+       PAGINATION
+    ═══════════════════════════════════════════ */
+    .pagination-bar {
+      padding: 14px 24px;
+      border-top: 1px solid var(--silver-200);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .pagination-info {
+      font-size: 13px;
+      color: var(--silver-500);
+    }
+
+    .pagination-info strong { color: #334155; }
+
+    .pagination-btns {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .pg-btn {
+      width: 34px;
+      height: 34px;
+      border: 1.5px solid var(--silver-200);
+      background: white;
+      border-radius: var(--radius-sm);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 13px;
+      font-family: 'DM Sans', sans-serif;
+      font-weight: 500;
+      cursor: pointer;
+      color: var(--silver-500);
+      transition: all var(--transition);
+      text-decoration: none;
+    }
+
+    .pg-btn:hover {
+      background: var(--silver-100);
+      border-color: var(--silver-300);
+      color: #1e293b;
+    }
+
+    .pg-btn.active {
+      background: var(--accent-blue);
+      border-color: var(--accent-blue);
+      color: white;
+      font-weight: 700;
+    }
+
+    .pg-btn:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+
+    /* ═══════════════════════════════════════════
+       DROPDOWN MENUS
+    ═══════════════════════════════════════════ */
+    .dropdown-menu {
+      border: 1px solid var(--silver-200);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-lg);
+      padding: 6px;
+      font-family: 'DM Sans', sans-serif;
+    }
+
+    .dropdown-item {
+      border-radius: var(--radius-sm);
+      font-size: 13.5px;
+      padding: 8px 12px;
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      color: #334155;
+      transition: background var(--transition);
+    }
+
+    .dropdown-item:hover { background: var(--silver-100); }
+    .dropdown-item.text-danger:hover { background: rgba(239,68,68,0.07); }
+
+    .dropdown-divider { margin: 4px 0; border-color: var(--silver-200); }
+
+    /* ═══════════════════════════════════════════
+       MODAL
+    ═══════════════════════════════════════════ */
+    .modal-content {
+      border: none;
+      border-radius: var(--radius-xl);
+      box-shadow: var(--shadow-lg);
+      font-family: 'DM Sans', sans-serif;
+    }
+
+    .modal-header {
+      padding: 20px 24px;
+      border-bottom: 1px solid var(--silver-200);
+      align-items: center;
+    }
+
+    .modal-title {
+      font-family: 'Sora', sans-serif;
+      font-weight: 700;
+      font-size: 16px;
+      color: var(--navy-900);
+    }
+
+    .modal-body { padding: 24px; }
+    .modal-footer { padding: 16px 24px; border-top: 1px solid var(--silver-200); }
+
+    .form-label {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--silver-500);
+      margin-bottom: 6px;
+      letter-spacing: 0.3px;
+    }
+
+    .form-control, .form-select {
+      font-family: 'DM Sans', sans-serif;
+      font-size: 14px;
+      border: 1.5px solid var(--silver-200);
+      border-radius: var(--radius-md);
+      padding: 9px 14px;
+      transition: border-color var(--transition), box-shadow var(--transition);
+    }
+
+    .form-control:focus, .form-select:focus {
+      border-color: var(--accent-blue-light);
+      box-shadow: 0 0 0 3px rgba(37,99,235,0.1);
+    }
+
+    /* ═══════════════════════════════════════════
+       NOTIFICATIONS PANEL (off-canvas style)
+    ═══════════════════════════════════════════ */
+    .notif-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      padding: 12px 0;
+      border-bottom: 1px solid var(--silver-200);
+    }
+
+    .notif-item:last-child { border-bottom: none; }
+
+    .notif-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      margin-top: 5px;
+      flex-shrink: 0;
+    }
+
+    /* ═══════════════════════════════════════════
+       RESPONSIVE
+    ═══════════════════════════════════════════ */
+    @media (max-width: 992px) {
+      .sidebar {
+        width: var(--sidebar-collapsed);
+      }
+      .sidebar.mobile-open {
+        width: var(--sidebar-width);
+      }
+      .main-wrapper {
+        margin-left: var(--sidebar-collapsed);
+      }
+      .stats-row {
+        grid-template-columns: repeat(2, 1fr);
+      }
+      .topbar-search { max-width: 220px; }
+    }
+
+    @media (max-width: 640px) {
+      .stats-row { grid-template-columns: 1fr 1fr; }
+      .page-content { padding: 18px 16px 32px; }
+      .page-header { flex-direction: column; align-items: flex-start; }
+      .topbar-search { display: none; }
+      .card-header-bar { flex-direction: column; align-items: flex-start; }
+    }
+
+    /* ═══════════════════════════════════════════
+       UTILITY
+    ═══════════════════════════════════════════ */
+    .text-truncate-custom {
+      max-width: 140px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .animate-fade-in {
+      animation: fadeIn 0.4s ease both;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Scrollbar */
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: var(--silver-300); border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: var(--silver-400); }
+
+    /* Toast */
+    .custom-toast {
+      font-family: 'DM Sans', sans-serif;
+      border-radius: var(--radius-lg);
+      border: 1px solid var(--silver-200);
+      box-shadow: var(--shadow-lg);
+    }
+  </style>
+</head>
+<body>
+
+<!-- ╔═══════════════════════════════════════════╗
+     ║           ADMIN SHELL                     ║
+     ╚═══════════════════════════════════════════╝ -->
+<div class="admin-shell">
+
+  <!-- ╔══════════════════════════════╗
+       ║         SIDEBAR              ║
+       ╚══════════════════════════════╝ -->
+  <aside class="sidebar" id="sidebar">
+
+    <!-- Brand Logo -->
+    <a href="#" class="sidebar-brand">
+      <div class="brand-icon">
+        <i class="bi bi-send-fill"></i>
+      </div>
+      <div class="brand-text">
+        <div class="brand-name">SkyAdmin</div>
+        <div class="brand-sub">Havayolu Paneli</div>
+      </div>
+    </a>
+
+    <!-- Navigation -->
+    <nav class="sidebar-nav" id="sidebarNav">
+
+      <!-- ANA MENÜ -->
+      <div class="sidebar-label">Ana Menü</div>
+
+      <div class="nav-item-wrap">
+        <a href="#" class="nav-link-item" data-tooltip="Dashboard" onclick="setActive(this)">
+          <i class="bi bi-grid-1x2-fill nav-icon"></i>
+          <span class="nav-label">Dashboard</span>
+        </a>
+      </div>
+
+      <div class="nav-item-wrap">
+        <a href="#" class="nav-link-item active" data-tooltip="Uçuşlar" onclick="setActive(this)">
+          <i class="bi bi-airplane-fill nav-icon"></i>
+          <span class="nav-label">Uçuşlar</span>
+          <span class="nav-badge">12</span>
+        </a>
+      </div>
+
+      <div class="nav-item-wrap">
+        <a href="#" class="nav-link-item" data-tooltip="Destinasyonlar" onclick="toggleSub(event, 'subDest')">
+          <i class="bi bi-geo-alt-fill nav-icon"></i>
+          <span class="nav-label">Destinasyonlar</span>
+          <i class="bi bi-chevron-right nav-arrow"></i>
+        </a>
+        <div class="sub-menu" id="subDest">
+          <a href="#" class="sub-menu-link"><i class="bi bi-circle-fill" style="font-size:6px;"></i> Tüm Destinasyonlar</a>
+          <a href="#" class="sub-menu-link"><i class="bi bi-circle-fill" style="font-size:6px;"></i> Yeni Ekle</a>
+          <a href="#" class="sub-menu-link"><i class="bi bi-circle-fill" style="font-size:6px;"></i> Harita Görünümü</a>
+        </div>
+      </div>
+
+      <div class="nav-item-wrap">
+        <a href="#" class="nav-link-item" data-tooltip="Uçak Filosu" onclick="toggleSub(event, 'subFleet')">
+          <i class="bi bi-hdd-rack-fill nav-icon"></i>
+          <span class="nav-label">Uçak Filosu</span>
+          <i class="bi bi-chevron-right nav-arrow"></i>
+        </a>
+        <div class="sub-menu" id="subFleet">
+          <a href="#" class="sub-menu-link"><i class="bi bi-circle-fill" style="font-size:6px;"></i> Tüm Uçaklar</a>
+          <a href="#" class="sub-menu-link"><i class="bi bi-circle-fill" style="font-size:6px;"></i> Bakım Takibi</a>
+        </div>
+      </div>
+
+      <!-- YÖNETİM -->
+      <div class="sidebar-label">Yönetim</div>
+
+      <div class="nav-item-wrap">
+        <a href="#" class="nav-link-item" data-tooltip="Yolcular" onclick="setActive(this)">
+          <i class="bi bi-people-fill nav-icon"></i>
+          <span class="nav-label">Yolcular</span>
+        </a>
+      </div>
+
+      <div class="nav-item-wrap">
+        <a href="#" class="nav-link-item" data-tooltip="Rezervasyonlar" onclick="setActive(this)">
+          <i class="bi bi-ticket-perforated-fill nav-icon"></i>
+          <span class="nav-label">Rezervasyonlar</span>
+          <span class="nav-badge">5</span>
+        </a>
+      </div>
+
+      <div class="nav-item-wrap">
+        <a href="#" class="nav-link-item" data-tooltip="Check-In" onclick="setActive(this)">
+          <i class="bi bi-check2-square nav-icon"></i>
+          <span class="nav-label">Check-In</span>
+        </a>
+      </div>
+
+      <div class="nav-item-wrap">
+        <a href="#" class="nav-link-item" data-tooltip="Teklifler" onclick="setActive(this)">
+          <i class="bi bi-tag-fill nav-icon"></i>
+          <span class="nav-label">Teklifler & İndirimler</span>
+        </a>
+      </div>
+
+      <!-- SİSTEM -->
+      <div class="sidebar-label">Sistem</div>
+
+      <div class="nav-item-wrap">
+        <a href="#" class="nav-link-item" data-tooltip="Raporlar" onclick="toggleSub(event, 'subReports')">
+          <i class="bi bi-bar-chart-fill nav-icon"></i>
+          <span class="nav-label">Raporlar</span>
+          <i class="bi bi-chevron-right nav-arrow"></i>
+        </a>
+        <div class="sub-menu" id="subReports">
+          <a href="#" class="sub-menu-link"><i class="bi bi-circle-fill" style="font-size:6px;"></i> Uçuş Raporları</a>
+          <a href="#" class="sub-menu-link"><i class="bi bi-circle-fill" style="font-size:6px;"></i> Gelir Raporları</a>
+          <a href="#" class="sub-menu-link"><i class="bi bi-circle-fill" style="font-size:6px;"></i> Yolcu Raporları</a>
+        </div>
+      </div>
+
+      <div class="nav-item-wrap">
+        <a href="#" class="nav-link-item" data-tooltip="Ayarlar" onclick="setActive(this)">
+          <i class="bi bi-gear-fill nav-icon"></i>
+          <span class="nav-label">Ayarlar</span>
+        </a>
+      </div>
+
+    </nav>
+
+    <!-- User Footer -->
+    <div class="sidebar-footer">
+      <div class="sidebar-user" data-bs-toggle="dropdown">
+        <div class="sidebar-avatar">AK</div>
+        <div class="sidebar-user-info">
+          <div class="sidebar-user-name">Ahmet Kaya</div>
+          <div class="sidebar-user-role">Sistem Yöneticisi</div>
+        </div>
+        <ul class="dropdown-menu dropdown-menu-end">
+          <li><a class="dropdown-item" href="#"><i class="bi bi-person"></i> Profil</a></li>
+          <li><a class="dropdown-item" href="#"><i class="bi bi-shield-lock"></i> Güvenlik</a></li>
+          <li><hr class="dropdown-divider"></li>
+          <li><a class="dropdown-item text-danger" href="#"><i class="bi bi-box-arrow-right"></i> Çıkış Yap</a></li>
+        </ul>
+      </div>
+    </div>
+
+  </aside>
+  <!-- /sidebar -->
+
+  <!-- ╔══════════════════════════════╗
+       ║         MAIN WRAPPER         ║
+       ╚══════════════════════════════╝ -->
+  <div class="main-wrapper" id="mainWrapper">
+
+    <!-- ─── TOPBAR ─── -->
+    <header class="topbar">
+
+      <!-- Toggle sidebar -->
+      <button class="topbar-toggle" onclick="toggleSidebar()" title="Menüyü Daralt/Genişlet">
+        <i class="bi bi-layout-sidebar-reverse"></i>
+      </button>
+
+      <!-- Search -->
+      <div class="topbar-search">
+        <i class="bi bi-search search-icon"></i>
+        <input type="text" placeholder="Uçuş, yolcu veya destinasyon ara..." />
+      </div>
+
+      <!-- Right section -->
+      <div class="topbar-right">
+
+        <!-- Notifications -->
+        <div class="dropdown">
+          <button class="topbar-btn" data-bs-toggle="dropdown" title="Bildirimler">
+            <i class="bi bi-bell"></i>
+            <span class="topbar-notif-badge"></span>
+          </button>
+          <div class="dropdown-menu dropdown-menu-end" style="width:320px; padding:0; overflow:hidden;">
+            <div style="padding:14px 16px; border-bottom:1px solid var(--silver-200); display:flex; align-items:center; justify-content:space-between;">
+              <span style="font-family:'Sora',sans-serif; font-weight:700; font-size:14px; color:var(--navy-900);">Bildirimler</span>
+              <span style="font-size:11px; color:var(--accent-blue); cursor:pointer;">Tümünü Gör</span>
+            </div>
+            <div style="padding:8px 16px;">
+              <div class="notif-item">
+                <div class="notif-dot" style="background:#3b82f6;"></div>
+                <div>
+                  <div style="font-size:13px; font-weight:500; color:#334155;">TK102 uçuşu boarding aşamasına geçti</div>
+                  <div style="font-size:11px; color:var(--silver-400); margin-top:2px;">2 dakika önce</div>
+                </div>
+              </div>
+              <div class="notif-item">
+                <div class="notif-dot" style="background:#f59e0b;"></div>
+                <div>
+                  <div style="font-size:13px; font-weight:500; color:#334155;">TK330 uçuşu 45 dakika gecikmeli</div>
+                  <div style="font-size:11px; color:var(--silver-400); margin-top:2px;">18 dakika önce</div>
+                </div>
+              </div>
+              <div class="notif-item">
+                <div class="notif-dot" style="background:#ef4444;"></div>
+                <div>
+                  <div style="font-size:13px; font-weight:500; color:#334155;">TK450 uçuşu iptal edildi</div>
+                  <div style="font-size:11px; color:var(--silver-400); margin-top:2px;">1 saat önce</div>
+                </div>
+              </div>
+              <div class="notif-item">
+                <div class="notif-dot" style="background:#10b981;"></div>
+                <div>
+                  <div style="font-size:13px; font-weight:500; color:#334155;">Yeni rezervasyon: #RES-8841</div>
+                  <div style="font-size:11px; color:var(--silver-400); margin-top:2px;">2 saat önce</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Messages -->
+        <button class="topbar-btn" title="Mesajlar">
+          <i class="bi bi-chat-dots"></i>
+        </button>
+
+        <div class="topbar-divider"></div>
+
+        <!-- Profile -->
+        <div class="dropdown">
+          <button class="topbar-profile" data-bs-toggle="dropdown">
+            <div class="topbar-avatar">AK</div>
+            <div class="d-none d-sm-block">
+              <div class="topbar-user-name">Ahmet Kaya</div>
+              <div class="topbar-user-role">Sistem Yöneticisi</div>
+            </div>
+            <i class="bi bi-chevron-down" style="font-size:11px; color:var(--silver-400); margin-left:4px;"></i>
+          </button>
+          <ul class="dropdown-menu dropdown-menu-end">
+            <li><a class="dropdown-item" href="#"><i class="bi bi-person-circle"></i> Profilim</a></li>
+            <li><a class="dropdown-item" href="#"><i class="bi bi-gear"></i> Hesap Ayarları</a></li>
+            <li><a class="dropdown-item" href="#"><i class="bi bi-shield-check"></i> Güvenlik</a></li>
+            <li><hr class="dropdown-divider"></li>
+            <li><a class="dropdown-item text-danger" href="#"><i class="bi bi-box-arrow-right"></i> Çıkış Yap</a></li>
+          </ul>
+        </div>
+
+      </div>
+    </header>
+    <!-- /topbar -->
+
+    <!-- ─── PAGE CONTENT ─── -->
+    <main class="page-content animate-fade-in">
+
+      <!-- Page Header -->
+      <div class="page-header">
+        <div>
+          <div class="page-breadcrumb">
+            <a href="#">Dashboard</a>
+            <i class="bi bi-chevron-right" style="font-size:10px;"></i>
+            <span>Uçuşlar</span>
+            <i class="bi bi-chevron-right" style="font-size:10px;"></i>
+            <span style="color:#1e293b; font-weight:500;">Uçuş Yönetimi</span>
+          </div>
+          <h1 class="page-title">Uçuş Yönetimi</h1>
+          <p class="page-subtitle">Sistemde kayıtlı uçuşları görüntüleyebilir, düzenleyebilir veya yeni uçuş ekleyebilirsiniz.</p>
+        </div>
+        <div style="display:flex; gap:10px; align-items:center; flex-shrink:0;">
+          <button class="btn-outline-custom" onclick="exportTable()">
+            <i class="bi bi-download"></i>
+            Dışa Aktar
+          </button>
+          <button class="btn-primary-custom" data-bs-toggle="modal" data-bs-target="#addFlightModal">
+            <i class="bi bi-plus-circle-fill"></i>
+            Yeni Uçuş Ekle
+          </button>
+        </div>
+      </div>
+
+      <!-- Stats Row -->
+      <div class="stats-row">
+        <div class="stat-card">
+          <div class="stat-icon-wrap si-blue">
+            <i class="bi bi-airplane-fill"></i>
+          </div>
+          <div>
+            <div class="stat-value">248</div>
+            <div class="stat-label">Toplam Uçuş</div>
+            <div class="stat-delta up"><i class="bi bi-arrow-up-short"></i>+12 bu ay</div>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon-wrap si-green">
+            <i class="bi bi-check-circle-fill"></i>
+          </div>
+          <div>
+            <div class="stat-value">194</div>
+            <div class="stat-label">Planlanan Uçuş</div>
+            <div class="stat-delta up"><i class="bi bi-arrow-up-short"></i>+8 bu hafta</div>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon-wrap si-amber">
+            <i class="bi bi-clock-fill"></i>
+          </div>
+          <div>
+            <div class="stat-value">31</div>
+            <div class="stat-label">Gecikmeli</div>
+            <div class="stat-delta down"><i class="bi bi-arrow-down-short"></i>-3 dün</div>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon-wrap si-red">
+            <i class="bi bi-x-circle-fill"></i>
+          </div>
+          <div>
+            <div class="stat-value">23</div>
+            <div class="stat-label">İptal Edilen</div>
+            <div class="stat-delta up"><i class="bi bi-arrow-up-short"></i>+2 bugün</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Main Table Card -->
+      <div class="main-card">
+
+        <!-- Card Header -->
+        <div class="card-header-bar">
+          <div class="card-header-left">
+            <div class="card-header-icon">
+              <i class="bi bi-table"></i>
+            </div>
+            <div>
+              <div class="card-title">Uçuş Listesi</div>
+              <div class="card-count" id="flightCount">12 uçuş listeleniyor</div>
+            </div>
+          </div>
+          <div style="display:flex; gap:8px;">
+            <button class="btn-outline-custom" onclick="refreshTable()">
+              <i class="bi bi-arrow-clockwise"></i>
+              Yenile
+            </button>
+          </div>
+        </div>
+
+        <!-- Toolbar -->
+        <div class="table-toolbar">
+          <div class="search-field">
+            <i class="bi bi-search si"></i>
+            <input type="text" id="tableSearch" placeholder="Uçuş ara..." oninput="filterTable()" />
+          </div>
+          <select class="filter-select" id="statusFilter" onchange="filterTable()">
+            <option value="">Tüm Durumlar</option>
+            <option value="Planlandı">Planlandı</option>
+            <option value="Boarding">Boarding</option>
+            <option value="Gecikmeli">Gecikmeli</option>
+            <option value="İptal">İptal</option>
+          </select>
+          <select class="filter-select" id="cityFilter" onchange="filterTable()">
+            <option value="">Tüm Şehirler</option>
+            <option value="Paris">Paris</option>
+            <option value="Roma">Roma</option>
+            <option value="Londra">Londra</option>
+            <option value="Berlin">Berlin</option>
+            <option value="Madrid">Madrid</option>
+            <option value="Amsterdam">Amsterdam</option>
+          </select>
+          <div class="toolbar-right">
+            <span style="font-size:12px; color:var(--silver-400);" id="filterInfo"></span>
+          </div>
+        </div>
+
+        <!-- Table -->
+        <div class="flights-table-wrap">
+          <table class="flights-table" id="flightsTable">
+            <thead>
+              <tr>
+                <th>
+                  <input type="checkbox" class="form-check-input" id="selectAll" onchange="toggleSelectAll(this)" style="margin-right:8px;">
+                  Uçuş No
+                </th>
+                <th>Kalkış Şehri</th>
+                <th>Varış Şehri</th>
+                <th>Kalkış Saati</th>
+                <th>Varış Saati</th>
+                <th>Uçak Modeli</th>
+                <th>Kapı (Gate)</th>
+                <th>Durum</th>
+                <th>İşlemler</th>
+              </tr>
+            </thead>
+            <tbody id="flightTableBody">
+              <!-- Rows injected by JS -->
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Pagination -->
+        <div class="pagination-bar">
+          <div class="pagination-info" id="paginationInfo">
+            <strong>1–10</strong> / 12 uçuş gösteriliyor
+          </div>
+          <div class="pagination-btns">
+            <button class="pg-btn" onclick="goPage('prev')" id="prevBtn" disabled>
+              <i class="bi bi-chevron-left"></i>
+            </button>
+            <button class="pg-btn active" onclick="goPage(1)" id="pg1">1</button>
+            <button class="pg-btn" onclick="goPage(2)" id="pg2">2</button>
+            <button class="pg-btn" onclick="goPage('next')" id="nextBtn">
+              <i class="bi bi-chevron-right"></i>
+            </button>
+          </div>
+        </div>
+
+      </div>
+      <!-- /main-card -->
+
+    </main>
+    <!-- /page-content -->
+
+  </div>
+  <!-- /main-wrapper -->
+
+</div>
+<!-- /admin-shell -->
+
+
+<!-- ╔══════════════════════════════════════╗
+     ║    MODAL: YENİ UÇUŞ EKLE            ║
+     ╚══════════════════════════════════════╝ -->
+<div class="modal fade" id="addFlightModal" tabindex="-1">
+  <div class="modal-dialog modal-lg modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <div style="display:flex; align-items:center; gap:12px;">
+          <div class="card-header-icon" style="width:34px; height:34px; font-size:15px;">
+            <i class="bi bi-plus-circle-fill"></i>
+          </div>
+          <h5 class="modal-title">Yeni Uçuş Ekle</h5>
+        </div>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <div class="row g-3">
+          <div class="col-md-4">
+            <label class="form-label">Uçuş Numarası</label>
+            <input type="text" class="form-control" id="newFlightNo" placeholder="TK000">
+          </div>
+          <div class="col-md-4">
+            <label class="form-label">Kalkış Şehri</label>
+            <input type="text" class="form-control" id="newOrigin" placeholder="İstanbul">
+          </div>
+          <div class="col-md-4">
+            <label class="form-label">Varış Şehri</label>
+            <input type="text" class="form-control" id="newDest" placeholder="Paris">
+          </div>
+          <div class="col-md-3">
+            <label class="form-label">Kalkış Saati</label>
+            <input type="time" class="form-control" id="newDep">
+          </div>
+          <div class="col-md-3">
+            <label class="form-label">Varış Saati</label>
+            <input type="time" class="form-control" id="newArr">
+          </div>
+          <div class="col-md-3">
+            <label class="form-label">Kapı (Gate)</label>
+            <input type="text" class="form-control" id="newGate" placeholder="G01">
+          </div>
+          <div class="col-md-3">
+            <label class="form-label">Durum</label>
+            <select class="form-select" id="newStatus">
+              <option value="Planlandı">Planlandı</option>
+              <option value="Boarding">Boarding</option>
+              <option value="Gecikmeli">Gecikmeli</option>
+              <option value="İptal">İptal</option>
+            </select>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">Uçak Modeli</label>
+            <select class="form-select" id="newAircraft">
+              <option>Airbus A320</option>
+              <option>Airbus A321</option>
+              <option>Airbus A330</option>
+              <option>Boeing 737</option>
+              <option>Boeing 777</option>
+              <option>Boeing 787</option>
+            </select>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">Uçuş Tarihi</label>
+            <input type="date" class="form-control" id="newDate">
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-outline-custom" data-bs-dismiss="modal">İptal</button>
+        <button class="btn-primary-custom" onclick="addFlight()">
+          <i class="bi bi-check-circle-fill"></i>
+          Uçuş Ekle
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: DÜZENLE -->
+<div class="modal fade" id="editFlightModal" tabindex="-1">
+  <div class="modal-dialog modal-lg modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <div style="display:flex; align-items:center; gap:12px;">
+          <div class="card-header-icon" style="width:34px; height:34px; font-size:15px; background:linear-gradient(135deg,#f59e0b,#d97706);">
+            <i class="bi bi-pencil-fill"></i>
+          </div>
+          <h5 class="modal-title">Uçuşu Düzenle — <span id="editFlightTitle"></span></h5>
+        </div>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="editIdx">
+        <div class="row g-3">
+          <div class="col-md-4">
+            <label class="form-label">Uçuş Numarası</label>
+            <input type="text" class="form-control" id="editFlightNo">
+          </div>
+          <div class="col-md-4">
+            <label class="form-label">Kalkış Şehri</label>
+            <input type="text" class="form-control" id="editOrigin">
+          </div>
+          <div class="col-md-4">
+            <label class="form-label">Varış Şehri</label>
+            <input type="text" class="form-control" id="editDest">
+          </div>
+          <div class="col-md-3">
+            <label class="form-label">Kalkış Saati</label>
+            <input type="time" class="form-control" id="editDep">
+          </div>
+          <div class="col-md-3">
+            <label class="form-label">Varış Saati</label>
+            <input type="time" class="form-control" id="editArr">
+          </div>
+          <div class="col-md-3">
+            <label class="form-label">Kapı (Gate)</label>
+            <input type="text" class="form-control" id="editGate">
+          </div>
+          <div class="col-md-3">
+            <label class="form-label">Durum</label>
+            <select class="form-select" id="editStatus">
+              <option value="Planlandı">Planlandı</option>
+              <option value="Boarding">Boarding</option>
+              <option value="Gecikmeli">Gecikmeli</option>
+              <option value="İptal">İptal</option>
+            </select>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">Uçak Modeli</label>
+            <select class="form-select" id="editAircraft">
+              <option>Airbus A320</option>
+              <option>Airbus A321</option>
+              <option>Airbus A330</option>
+              <option>Boeing 737</option>
+              <option>Boeing 777</option>
+              <option>Boeing 787</option>
+            </select>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-outline-custom" data-bs-dismiss="modal">İptal</button>
+        <button class="btn-primary-custom" style="background:linear-gradient(135deg,#f59e0b,#d97706); box-shadow:0 3px 12px rgba(245,158,11,0.35);" onclick="saveEdit()">
+          <i class="bi bi-check-circle-fill"></i>
+          Değişiklikleri Kaydet
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: GÖRÜNTÜLE -->
+<div class="modal fade" id="viewFlightModal" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <div style="display:flex; align-items:center; gap:12px;">
+          <div class="card-header-icon" style="width:34px; height:34px; font-size:15px; background:linear-gradient(135deg,var(--accent-sky),var(--accent-cyan));">
+            <i class="bi bi-eye-fill"></i>
+          </div>
+          <h5 class="modal-title">Uçuş Detayları</h5>
+        </div>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body" id="viewModalBody">
+        <!-- Filled by JS -->
+      </div>
+      <div class="modal-footer">
+        <button class="btn-outline-custom" data-bs-dismiss="modal">Kapat</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: SİL -->
+<div class="modal fade" id="deleteModal" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered" style="max-width:420px;">
+    <div class="modal-content">
+      <div class="modal-header" style="border-bottom:none; padding-bottom:0;">
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body" style="text-align:center; padding:24px;">
+        <div style="width:60px; height:60px; background:rgba(239,68,68,0.1); border-radius:50%; display:flex; align-items:center; justify-content:center; margin:0 auto 16px; font-size:26px; color:#dc2626;">
+          <i class="bi bi-trash3-fill"></i>
+        </div>
+        <h5 style="font-family:'Sora',sans-serif; font-weight:700; color:var(--navy-900); margin-bottom:8px;">Uçuşu Sil</h5>
+        <p style="color:var(--silver-500); font-size:14px;"><strong id="deleteFlightNo" style="color:#1e293b;"></strong> numaralı uçuşu silmek istediğinizden emin misiniz? Bu işlem geri alınamaz.</p>
+        <input type="hidden" id="deleteIdx">
+      </div>
+      <div class="modal-footer" style="border-top:none; justify-content:center; gap:12px;">
+        <button class="btn-outline-custom" data-bs-dismiss="modal">Vazgeç</button>
+        <button class="btn-primary-custom" style="background:linear-gradient(135deg,#ef4444,#dc2626); box-shadow:0 3px 12px rgba(239,68,68,0.35);" onclick="confirmDelete()">
+          <i class="bi bi-trash3-fill"></i>
+          Evet, Sil
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Toast Container -->
+<div class="position-fixed bottom-0 end-0 p-3" style="z-index:9999;">
+  <div id="liveToast" class="toast custom-toast align-items-center" role="alert">
+    <div class="d-flex">
+      <div class="toast-body" id="toastMsg" style="font-size:14px;"></div>
+      <button type="button" class="btn-close me-2 m-auto" data-bs-dismiss="toast"></button>
+    </div>
+  </div>
+</div>
+
+<!-- Bootstrap 5 JS Bundle -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+<script>
+/* ════════════════════════════════════════════
+   DATA — Demo Uçuş Verileri
+════════════════════════════════════════════ */
+const cityFlags = {
+  'İstanbul': '🇹🇷', 'Paris': '🇫🇷', 'Roma': '🇮🇹', 'Londra': '🇬🇧',
+  'Berlin': '🇩🇪', 'Madrid': '🇪🇸', 'Amsterdam': '🇳🇱', 'Viyana': '🇦🇹',
+  'Zürih': '🇨🇭', 'Brüksel': '🇧🇪', 'Münih': '🇩🇪', 'Barselona': '🇪🇸'
+};
+
+let flights = [
+  { no:'TK102', origin:'İstanbul', dest:'Paris',     dep:'10:30', arr:'13:00', aircraft:'Airbus A320', gate:'G12', status:'Boarding' },
+  { no:'TK215', origin:'İstanbul', dest:'Roma',      dep:'11:15', arr:'13:30', aircraft:'Boeing 737',  gate:'G5',  status:'Planlandı' },
+  { no:'TK330', origin:'İstanbul', dest:'Londra',    dep:'12:40', arr:'15:10', aircraft:'Airbus A321', gate:'G8',  status:'Gecikmeli' },
+  { no:'TK450', origin:'İstanbul', dest:'Berlin',    dep:'14:20', arr:'16:50', aircraft:'Boeing 737',  gate:'G2',  status:'İptal' },
+  { no:'TK512', origin:'İstanbul', dest:'Madrid',    dep:'08:55', arr:'12:05', aircraft:'Boeing 777',  gate:'G14', status:'Planlandı' },
+  { no:'TK624', origin:'İstanbul', dest:'Amsterdam', dep:'09:30', arr:'12:00', aircraft:'Airbus A330', gate:'G3',  status:'Boarding' },
+  { no:'TK718', origin:'İstanbul', dest:'Viyana',    dep:'13:45', arr:'15:30', aircraft:'Airbus A320', gate:'G7',  status:'Planlandı' },
+  { no:'TK831', origin:'İstanbul', dest:'Zürih',     dep:'15:00', arr:'17:10', aircraft:'Boeing 787',  gate:'G11', status:'Gecikmeli' },
+  { no:'TK910', origin:'İstanbul', dest:'Brüksel',   dep:'16:30', arr:'18:50', aircraft:'Boeing 737',  gate:'G6',  status:'Planlandı' },
+  { no:'TK943', origin:'İstanbul', dest:'Münih',     dep:'07:20', arr:'09:00', aircraft:'Airbus A321', gate:'G9',  status:'İptal' },
+  { no:'TK1011',origin:'İstanbul', dest:'Barselona', dep:'18:10', arr:'21:00', aircraft:'Boeing 777',  gate:'G1',  status:'Planlandı' },
+  { no:'TK1120',origin:'İstanbul', dest:'Paris',     dep:'20:45', arr:'23:15', aircraft:'Airbus A330', gate:'G10', status:'Boarding' },
+];
+
+/* ════════════════════════════════════════════
+   STATE
+════════════════════════════════════════════ */
+let filteredFlights = [...flights];
+let currentPage = 1;
+const perPage = 10;
+let sidebarCollapsed = false;
+
+/* ════════════════════════════════════════════
+   STATUS BADGE HELPER
+════════════════════════════════════════════ */
+function statusBadge(s) {
+  const map = {
+    'Planlandı': 'status-planned',
+    'Boarding':  'status-boarding',
+    'Gecikmeli': 'status-delayed',
+    'İptal':     'status-cancelled'
+  };
+  return `<span class="status-badge ${map[s] || 'status-planned'}">${s}</span>`;
+}
+
+/* ════════════════════════════════════════════
+   RENDER TABLE
+════════════════════════════════════════════ */
+function renderTable() {
+  const tbody = document.getElementById('flightTableBody');
+  const start = (currentPage - 1) * perPage;
+  const end   = start + perPage;
+  const pageData = filteredFlights.slice(start, end);
+
+  if (pageData.length === 0) {
+    tbody.innerHTML = `
+      <tr>
+        <td colspan="9" style="text-align:center; padding:48px; color:var(--silver-400);">
+          <i class="bi bi-search" style="font-size:28px; display:block; margin-bottom:10px;"></i>
+          <div style="font-size:14px; font-weight:500;">Arama kriterlerine uygun uçuş bulunamadı.</div>
+        </td>
+      </tr>`;
+    return;
+  }
+
+  tbody.innerHTML = pageData.map((f, i) => {
+    const realIdx = flights.indexOf(f);
+    const flag = cityFlags[f.dest] || '✈️';
+    const originFlag = cityFlags[f.origin] || '🇹🇷';
+    return `
+      <tr class="animate-fade-in">
+        <td>
+          <div style="display:flex; align-items:center; gap:10px;">
+            <input type="checkbox" class="form-check-input row-check">
+            <span class="flight-no">${f.no}</span>
+          </div>
+        </td>
+        <td>
+          <div class="city-cell">
+            <span class="city-flag">${originFlag}</span>
+            <span class="city-name">${f.origin}</span>
+          </div>
+        </td>
+        <td>
+          <div class="city-cell">
+            <span class="city-flag">${flag}</span>
+            <span class="city-name">${f.dest}</span>
+          </div>
+        </td>
+        <td><span class="time-cell">${f.dep}</span></td>
+        <td><span class="time-cell">${f.arr}</span></td>
+        <td><span class="aircraft-cell"><i class="bi bi-airplane" style="margin-right:5px; color:var(--silver-400);"></i>${f.aircraft}</span></td>
+        <td><span class="gate-badge">${f.gate}</span></td>
+        <td>${statusBadge(f.status)}</td>
+        <td>
+          <div class="action-btns">
+            <button class="action-btn ab-view" title="Görüntüle" onclick="viewFlight(${realIdx})">
+              <i class="bi bi-eye"></i>
+            </button>
+            <button class="action-btn ab-edit" title="Düzenle" onclick="editFlight(${realIdx})">
+              <i class="bi bi-pencil"></i>
+            </button>
+            <button class="action-btn ab-delete" title="Sil" onclick="deleteFlight(${realIdx})">
+              <i class="bi bi-trash3"></i>
+            </button>
+          </div>
+        </td>
+      </tr>`;
+  }).join('');
+
+  // Pagination info
+  const total = filteredFlights.length;
+  const s = start + 1;
+  const e = Math.min(end, total);
+  document.getElementById('paginationInfo').innerHTML = `<strong>${s}–${e}</strong> / ${total} uçuş gösteriliyor`;
+  document.getElementById('flightCount').textContent = `${total} uçuş listeleniyor`;
+
+  // Pagination buttons
+  const totalPages = Math.ceil(total / perPage);
+  document.getElementById('prevBtn').disabled = currentPage === 1;
+  document.getElementById('nextBtn').disabled = currentPage >= totalPages;
+
+  document.querySelectorAll('[id^="pg"]').forEach(btn => {
+    const n = parseInt(btn.id.replace('pg',''));
+    btn.classList.toggle('active', n === currentPage);
+    btn.style.display = n <= totalPages ? 'flex' : 'none';
+  });
+}
+
+/* ════════════════════════════════════════════
+   FILTER
+════════════════════════════════════════════ */
+function filterTable() {
+  const q      = document.getElementById('tableSearch').value.toLowerCase();
+  const status = document.getElementById('statusFilter').value;
+  const city   = document.getElementById('cityFilter').value;
+
+  filteredFlights = flights.filter(f => {
+    const matchQ  = !q || f.no.toLowerCase().includes(q)
+                       || f.origin.toLowerCase().includes(q)
+                       || f.dest.toLowerCase().includes(q)
+                       || f.aircraft.toLowerCase().includes(q);
+    const matchS  = !status || f.status === status;
+    const matchC  = !city   || f.dest === city || f.origin === city;
+    return matchQ && matchS && matchC;
+  });
+
+  const info = document.getElementById('filterInfo');
+  if (filteredFlights.length < flights.length) {
+    info.textContent = `${filteredFlights.length} sonuç filtrelendi`;
+  } else {
+    info.textContent = '';
+  }
+
+  currentPage = 1;
+  renderTable();
+}
+
+/* ════════════════════════════════════════════
+   PAGINATION
+════════════════════════════════════════════ */
+function goPage(p) {
+  const totalPages = Math.ceil(filteredFlights.length / perPage);
+  if (p === 'prev') currentPage = Math.max(1, currentPage - 1);
+  else if (p === 'next') currentPage = Math.min(totalPages, currentPage + 1);
+  else currentPage = p;
+  renderTable();
+}
+
+/* ════════════════════════════════════════════
+   ADD FLIGHT
+════════════════════════════════════════════ */
+function addFlight() {
+  const no       = document.getElementById('newFlightNo').value.trim();
+  const origin   = document.getElementById('newOrigin').value.trim();
+  const dest     = document.getElementById('newDest').value.trim();
+  const dep      = document.getElementById('newDep').value;
+  const arr      = document.getElementById('newArr').value;
+  const gate     = document.getElementById('newGate').value.trim();
+  const status   = document.getElementById('newStatus').value;
+  const aircraft = document.getElementById('newAircraft').value;
+
+  if (!no || !origin || !dest || !dep || !arr || !gate) {
+    showToast('⚠️ Lütfen tüm zorunlu alanları doldurunuz.', 'warning');
+    return;
+  }
+
+  flights.unshift({ no, origin, dest, dep, arr, aircraft, gate, status });
+  filteredFlights = [...flights];
+
+  bootstrap.Modal.getInstance(document.getElementById('addFlightModal')).hide();
+  renderTable();
+  showToast(`✅ ${no} uçuşu başarıyla eklendi.`, 'success');
+
+  // Reset form
+  ['newFlightNo','newOrigin','newDest','newDep','newArr','newGate'].forEach(id => document.getElementById(id).value = '');
+}
+
+/* ════════════════════════════════════════════
+   VIEW FLIGHT
+════════════════════════════════════════════ */
+function viewFlight(idx) {
+  const f = flights[idx];
+  document.getElementById('viewModalBody').innerHTML = `
+    <div style="background:var(--silver-100); border-radius:var(--radius-lg); padding:16px; margin-bottom:16px; display:flex; align-items:center; gap:12px;">
+      <div style="font-size:32px;">✈️</div>
+      <div>
+        <div style="font-family:'Space Mono',monospace; font-size:20px; font-weight:700; color:var(--accent-blue);">${f.no}</div>
+        <div style="font-size:13px; color:var(--silver-500);">${f.origin} → ${f.dest}</div>
+      </div>
+      <div style="margin-left:auto;">${statusBadge(f.status)}</div>
+    </div>
+    <div class="row g-3">
+      <div class="col-6">
+        <div style="font-size:11px; text-transform:uppercase; letter-spacing:1px; color:var(--silver-400); font-weight:700; margin-bottom:4px;">Kalkış</div>
+        <div style="font-family:'Space Mono',monospace; font-size:22px; font-weight:700; color:var(--navy-900);">${f.dep}</div>
+        <div style="font-size:13px; color:var(--silver-500);">${cityFlags[f.origin]||'🌍'} ${f.origin}</div>
+      </div>
+      <div class="col-6">
+        <div style="font-size:11px; text-transform:uppercase; letter-spacing:1px; color:var(--silver-400); font-weight:700; margin-bottom:4px;">Varış</div>
+        <div style="font-family:'Space Mono',monospace; font-size:22px; font-weight:700; color:var(--navy-900);">${f.arr}</div>
+        <div style="font-size:13px; color:var(--silver-500);">${cityFlags[f.dest]||'🌍'} ${f.dest}</div>
+      </div>
+      <div class="col-6">
+        <div style="font-size:11px; text-transform:uppercase; letter-spacing:1px; color:var(--silver-400); font-weight:700; margin-bottom:4px;">Uçak Modeli</div>
+        <div style="font-size:14px; font-weight:500; color:#334155;"><i class="bi bi-airplane" style="margin-right:6px; color:var(--silver-400);"></i>${f.aircraft}</div>
+      </div>
+      <div class="col-6">
+        <div style="font-size:11px; text-transform:uppercase; letter-spacing:1px; color:var(--silver-400); font-weight:700; margin-bottom:4px;">Kapı (Gate)</div>
+        <div><span class="gate-badge" style="font-size:15px;">${f.gate}</span></div>
+      </div>
+    </div>`;
+  new bootstrap.Modal(document.getElementById('viewFlightModal')).show();
+}
+
+/* ════════════════════════════════════════════
+   EDIT FLIGHT
+════════════════════════════════════════════ */
+function editFlight(idx) {
+  const f = flights[idx];
+  document.getElementById('editIdx').value = idx;
+  document.getElementById('editFlightTitle').textContent = f.no;
+  document.getElementById('editFlightNo').value = f.no;
+  document.getElementById('editOrigin').value   = f.origin;
+  document.getElementById('editDest').value     = f.dest;
+  document.getElementById('editDep').value      = f.dep;
+  document.getElementById('editArr').value      = f.arr;
+  document.getElementById('editGate').value     = f.gate;
+  document.getElementById('editStatus').value   = f.status;
+  document.getElementById('editAircraft').value = f.aircraft;
+  new bootstrap.Modal(document.getElementById('editFlightModal')).show();
+}
+
+function saveEdit() {
+  const idx = parseInt(document.getElementById('editIdx').value);
+  flights[idx] = {
+    no:       document.getElementById('editFlightNo').value,
+    origin:   document.getElementById('editOrigin').value,
+    dest:     document.getElementById('editDest').value,
+    dep:      document.getElementById('editDep').value,
+    arr:      document.getElementById('editArr').value,
+    gate:     document.getElementById('editGate').value,
+    status:   document.getElementById('editStatus').value,
+    aircraft: document.getElementById('editAircraft').value,
+  };
+  filteredFlights = [...flights];
+  filterTable();
+  bootstrap.Modal.getInstance(document.getElementById('editFlightModal')).hide();
+  showToast(`✏️ ${flights[idx].no} uçuşu güncellendi.`, 'info');
+}
+
+/* ════════════════════════════════════════════
+   DELETE FLIGHT
+════════════════════════════════════════════ */
+function deleteFlight(idx) {
+  document.getElementById('deleteIdx').value = idx;
+  document.getElementById('deleteFlightNo').textContent = flights[idx].no;
+  new bootstrap.Modal(document.getElementById('deleteModal')).show();
+}
+
+function confirmDelete() {
+  const idx = parseInt(document.getElementById('deleteIdx').value);
+  const no  = flights[idx].no;
+  flights.splice(idx, 1);
+  filteredFlights = [...flights];
+  filterTable();
+  bootstrap.Modal.getInstance(document.getElementById('deleteModal')).hide();
+  showToast(`🗑️ ${no} uçuşu silindi.`, 'danger');
+}
+
+/* ════════════════════════════════════════════
+   SIDEBAR TOGGLE
+════════════════════════════════════════════ */
+function toggleSidebar() {
+  const sidebar = document.getElementById('sidebar');
+  const main    = document.getElementById('mainWrapper');
+  sidebarCollapsed = !sidebarCollapsed;
+  sidebar.classList.toggle('collapsed', sidebarCollapsed);
+  main.classList.toggle('collapsed-main', sidebarCollapsed);
+}
+
+/* ════════════════════════════════════════════
+   SIDEBAR NAV HELPERS
+════════════════════════════════════════════ */
+function setActive(el) {
+  document.querySelectorAll('.nav-link-item').forEach(a => a.classList.remove('active'));
+  el.classList.add('active');
+}
+
+function toggleSub(e, id) {
+  e.preventDefault();
+  const el  = e.currentTarget;
+  const sub = document.getElementById(id);
+  const isOpen = sub.classList.contains('open');
+
+  // Close all
+  document.querySelectorAll('.sub-menu').forEach(s => s.classList.remove('open'));
+  document.querySelectorAll('.nav-link-item').forEach(a => a.classList.remove('sub-open'));
+
+  if (!isOpen) {
+    sub.classList.add('open');
+    el.classList.add('sub-open');
+  }
+  setActive(el);
+}
+
+/* ════════════════════════════════════════════
+   SELECT ALL
+════════════════════════════════════════════ */
+function toggleSelectAll(cb) {
+  document.querySelectorAll('.row-check').forEach(c => c.checked = cb.checked);
+}
+
+/* ════════════════════════════════════════════
+   REFRESH
+════════════════════════════════════════════ */
+function refreshTable() {
+  const btn = event.currentTarget;
+  btn.innerHTML = '<i class="bi bi-arrow-clockwise" style="animation:spin 0.6s linear infinite;"></i> Yenileniyor...';
+  setTimeout(() => {
+    btn.innerHTML = '<i class="bi bi-arrow-clockwise"></i> Yenile';
+    filteredFlights = [...flights];
+    document.getElementById('tableSearch').value = '';
+    document.getElementById('statusFilter').value = '';
+    document.getElementById('cityFilter').value = '';
+    currentPage = 1;
+    renderTable();
+    showToast('🔄 Tablo yenilendi.', 'success');
+  }, 700);
+}
+
+/* ════════════════════════════════════════════
+   EXPORT (mock)
+════════════════════════════════════════════ */
+function exportTable() {
+  showToast('📥 Dışa aktarma başlatıldı. Dosyanız indiriliyor...', 'info');
+}
+
+/* ════════════════════════════════════════════
+   TOAST
+════════════════════════════════════════════ */
+function showToast(msg, type) {
+  const toastEl = document.getElementById('liveToast');
+  const toastMsg = document.getElementById('toastMsg');
+  toastMsg.textContent = msg;
+  toastEl.className = `toast custom-toast align-items-center text-bg-${type} border-0`;
+  const t = bootstrap.Toast.getOrCreateInstance(toastEl, { delay: 3000 });
+  t.show();
+}
+
+/* ════════════════════════════════════════════
+   SPIN ANIMATION
+════════════════════════════════════════════ */
+const spinStyle = document.createElement('style');
+spinStyle.textContent = '@keyframes spin { from { transform:rotate(0deg); } to { transform:rotate(360deg); } }';
+document.head.appendChild(spinStyle);
+
+/* ════════════════════════════════════════════
+   INIT
+════════════════════════════════════════════ */
+document.addEventListener('DOMContentLoaded', () => {
+  renderTable();
+  // Set today's date in new flight modal
+  const today = new Date().toISOString().split('T')[0];
+  const newDate = document.getElementById('newDate');
+  if (newDate) newDate.value = today;
+});
+</script>
+</body>
+</html>
